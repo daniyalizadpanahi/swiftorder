@@ -1,7 +1,7 @@
 services:
   web:
     build: .
-    container_name: swiftorder_app
+    container_name: swiftorder_main
     command: gunicorn --bind 0.0.0.0:8000 swiftorder.wsgi:application
     volumes:
       - .:/app
@@ -16,7 +16,7 @@ services:
 
   db:
     image: mysql:8.0
-    container_name: swiftorder_mysql
+    container_name: swiftorder_db
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
