@@ -18,10 +18,10 @@ services:
     image: mysql:8.0
     container_name: swiftorder_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: 12121399D@niyal
-      MYSQL_DATABASE: swiftorder_db
-      MYSQL_USER: root
-      MYSQL_PASSWORD: 12121399D@niyal
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
