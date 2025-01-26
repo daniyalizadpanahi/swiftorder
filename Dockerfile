@@ -15,11 +15,15 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir --upgrade pip setuptools
 
 # Install Python dependencies
-COPY requirements.txt .
+COPY requirements.txt . 
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
+
+# Copy the entrypoint script and give it execute permission
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Expose the port Django runs on
 EXPOSE 8000
@@ -28,8 +32,8 @@ EXPOSE 8000
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Run the application
-CMD sh -c "python manage.py makemigrations && \
-            python manage.py migrate && \
-            python manage.py collectstatic --noinput && \
-            python manage.py runserver 0.0.0.0:8000"
+# Set the entrypoint to the script
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Default command to run the server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
