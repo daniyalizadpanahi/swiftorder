@@ -20,6 +20,7 @@ from django.urls import path, include, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework_simplejwt import views as jwt_views
+from django.conf import settings
 from rest_framework import permissions
 
 
@@ -29,7 +30,7 @@ schema_view = get_schema_view(
         default_version="v1",
         description="مستندات API سیستم SwiftOrder",
         terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="your_email@example.com"),
+        contact=openapi.Contact(email="daniyal.izadpanahi@gmail.com"),
         license=openapi.License(name="MIT License"),
     ),
     public=True,
@@ -60,3 +61,9 @@ urlpatterns = [
     path("payments/", include("payments.urls", namespace="payments")),
     path("products/", include("products.urls", namespace="products")),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

@@ -40,9 +40,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_ratelimit",
+    "django_celery_results",
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_yasg",
+    # "debug_toolbar",
     "account",
     "orders",
     "payments",
@@ -52,6 +54,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -118,6 +121,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
 }
 
 
@@ -144,16 +149,30 @@ ENVIRONMENT = os.getenv("DJANGO_ENV", "local")
 if ENVIRONMENT == "docker":
     STATIC_ROOT = "/app/staticfiles/"
 else:
-    STATIC_ROOT = None
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
+INTERNAL_IPS = [
+    '127.0.0.1',
+    'localhost',
+    '0.0.0.0'
+]
+
+def show_toolbar(request):
+    return True
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK" : show_toolbar,
+    'IS_RUNNING_TESTS': False,
+}
+
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_BACKEND = "django-db"
 
 CACHES = {
     "default": {
@@ -174,8 +193,8 @@ SIMPLE_JWT = {
 }
 
 # SMTP Service
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
@@ -184,5 +203,5 @@ DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
 
 
 # Zarinpal
-ZARINPAL_MERCHANT_ID = 'your_merchant_id_here'
-ZARINPAL_API_URL = 'https://api.zarinpal.com/pg/rest/WebGate/PaymentRequest.json'
+ZARINPAL_MERCHANT_ID = "your_merchant_id_here"
+ZARINPAL_API_URL = "https://api.zarinpal.com/pg/rest/WebGate/PaymentRequest.json"
