@@ -5,11 +5,11 @@ from .views import ProductViewSet, CategoryViewSet, ProductByCategoryView, Produ
 app_name="products"
 
 router = DefaultRouter()
-router.register(r'products', ProductViewSet)
-router.register(r'categories', CategoryViewSet)
-router.register(r'all-products', ProductListViewSet)
+router.register(r'admin', ProductViewSet, basename='product-detail')
+router.register(r'category', CategoryViewSet, basename='category')
+router.register(r'list', ProductListViewSet, basename='all-products')
 
 urlpatterns = [
-    path('api/', include(router.urls)),
-    path('api/products-by-category/<int:category_id>/', ProductByCategoryView.as_view(), name='products_by_category'),
+    path('', include(router.urls)),
+    path('by-category/<int:category_id>/', ProductByCategoryView.as_view(), name='products_by_category'),
 ]

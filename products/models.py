@@ -1,11 +1,13 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
 class Product(models.Model):
     name = models.CharField(max_length=255)
-    description = models.TextField()
-    price = models.PositiveIntegerField()
-    stock = models.PositiveIntegerField()
+    description = models.TextField(null=True, blank=True)
+    price = models.PositiveIntegerField(default=0)
+    stock = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
