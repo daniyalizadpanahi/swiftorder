@@ -1,69 +1,81 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from products.models import Product
+from uuid import uuid4
+
+User = get_user_model()
 
 
 class Order(models.Model):
-    STATUS_CHOICES = [
-        ("pending", "Pending"),
-        ("completed", "Completed"),
-        ("canceled", "Canceled"),
-    ]
-
-    PAYMENT_STATUS_CHOICES = [
-        ("waiting", "Waiting for Payment"),
-        ("paid", "Paid"),
-        ("failed", "Payment Failed"),
-        ("canceled", "Payment Canceled"),
-    ]
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders"
+    PAYMENT_STATUS_PENDING = "P"
+    PAYMENT_STATUS_COMPLETE = "C"
+    PAYMENT_STATUS_FAILED = "F"
+    PAYMENT_STATUS_CHOICES = (
+        (PAYMENT_STATUS_PENDING, "Pending"),
+        (PAYMENT_STATUS_COMPLETE, "Completed"),
+        (PAYMENT_STATUS_FAILED, "Failed"),
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
     payment_status = models.CharField(
-        max_length=20, choices=PAYMENT_STATUS_CHOICES, default="waiting"
+        max_length=1,
+        choices=PAYMENT_STATUS_CHOICES,
+        default=PAYMENT_STATUS_PENDING,
+        verbose_name="Payment Status",
     )
-    payment_id = models.CharField(max_length=100, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Buyer")
+    created_at = models.DateTimeField(auto_now=True, verbose_name="Order Created At")
+    total_price = models.IntegerField(verbose_name="Total Price")
+    token = models.CharField(max_length=255, verbose_name="Token")
+    tracking_code = models.CharField(
+        max_length=16, unique=True, verbose_name="Tracking Code"
+    )
 
     def __str__(self):
-        return f"Order #{self.id} - {self.user.username}"
+        user_orders = Order.objects.prefetch_related().filter(user=self.user).count()
+        return f"{self.user} ({user_orders} orders)"
+
+    class Meta:
+        verbose_name = "Order List"
+        verbose_name_plural = "Order Lists"
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="order_items"
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, verbose_name="Order", related_name="items"
     )
-    quantity = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.quantity} x {self.product.name}"
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name="orderitems",
+        verbose_name="Product",
+    )
+    order_item_price = models.PositiveIntegerField(verbose_name="Price")
+    quantity = models.PositiveSmallIntegerField(default=1, verbose_name="Quantity")
 
 
 class Cart(models.Model):
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="cart"
+    id = models.UUIDField(primary_key=True, default=uuid4, verbose_name="ID")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Cart Created At")
+    last_update = models.DateTimeField(
+        auto_now_add=True, verbose_name="Last Updated At"
     )
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Cart of {self.user.username}"
+    class Meta:
+        verbose_name = "Cart"
+        verbose_name_plural = "Carts"
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
+    cart = models.ForeignKey(
+        Cart, on_delete=models.CASCADE, related_name="items", verbose_name="Cart"
+    )
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, verbose_name="Product"
+    )
+    quantity = models.PositiveSmallIntegerField(verbose_name="Quantity")
 
     class Meta:
-        unique_together = ("cart", "product")
-
-    def __str__(self):
-        return (
-            f"{self.quantity} x {self.product.name} in {self.cart.user.username}'s cart"
-        )
+        unique_together = [["cart", "product"]]
+        verbose_name = "Cart Item"
+        verbose_name_plural = "Cart Items"
